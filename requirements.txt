@@ -1,0 +1,6 @@
+pymupdf
+opencv-python
+openpyxl
+google-genai
+python-dotenv
+Pillow

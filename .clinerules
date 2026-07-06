@@ -1,0 +1,14 @@
+# Cline Rules — OCR Table Extractor (Tiếng Việt)
+
+## Bắt buộc đọc trước khi làm bất kỳ task nào
+Đọc toàn bộ các file trong thư mục `memory-bank/` theo thứ tự:
+projectbrief.md → productContext.md → techContext.md → systemPatterns.md → activeContext.md → progress.md
+
+## Quy tắc làm việc
+1. Người dùng KHÔNG rành code. Giải thích ngắn gọn bằng tiếng Việt mỗi khi thực hiện thay đổi lớn, tránh thuật ngữ khó hiểu khi không cần thiết.
+2. Làm từng bước nhỏ, test được ngay sau mỗi bước (theo pipeline trong systemPatterns.md). Không viết toàn bộ chương trình cùng lúc rồi mới test.
+3. Trước khi cài thư viện mới hoặc đổi kiến trúc, hỏi xác nhận người dùng trước.
+4. Không tự ý xoá hoặc ghi đè file trong thư mục `test-samples/` (chứa file PDF mẫu để test).
+5. Sau khi hoàn thành 1 task: cập nhật `memory-bank/activeContext.md` và `memory-bank/progress.md` để phiên làm việc sau (dù dùng AI khác hay quên ngữ cảnh) vẫn hiểu được tình trạng dự án.
+6. Ưu tiên giải pháp đơn giản, dễ bảo trì hơn là giải pháp "tối ưu" nhưng phức tạp — vì đây là tool cá nhân, không phải sản phẩm thương mại.
+7. Khi không chắc chắn về 1 quyết định kỹ thuật (vd: chọn thư viện OCR nào), trình bày ưu/nhược điểm ngắn gọn và hỏi người dùng chọn, thay vì tự quyết định.
