@@ -2,7 +2,7 @@
 Milestone 2: Gửi ảnh trang cho Gemini API (Flash, vision) → nhận JSON có cấu trúc.
 
 Cách chạy:
-    python src/gemini_extractor.py debug_output/PAGE\ 10+11+12/page_02.png
+    python src/gemini_extractor.py "debug_output/PAGE 10+11+12/page_02.png"
 """
 
 import sys
@@ -83,15 +83,15 @@ def extract_json_from_response(text: str) -> dict:
     - Có text thừa trước/sau JSON
     """
     # Bước 1: Tìm ```json ... ``` hoặc ``` ... ```
-    match = re.search(r'```(?:json)?\s*\n?(.*?)\n?```', text, re.DOTALL)
+    match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", text, re.DOTALL)
     if match:
         json_str = match.group(1).strip()
     else:
         # Bước 2: Không có code fence, thử tìm { ... } đầu tiên và cuối cùng
-        start = text.find('{')
-        end = text.rfind('}')
+        start = text.find("{")
+        end = text.rfind("}")
         if start != -1 and end != -1 and end > start:
-            json_str = text[start:end + 1]
+            json_str = text[start : end + 1]
         else:
             json_str = text.strip()
 
@@ -109,7 +109,9 @@ def extract_json_from_response(text: str) -> dict:
         raise
 
 
-def extract_table(image_path: str, model: str = "gemini-3.1-flash-lite-preview") -> dict:
+def extract_table(
+    image_path: str, model: str = "gemini-3.1-flash-lite-preview"
+) -> dict:
     """
     Gửi 1 ảnh trang cho Gemini API, nhận JSON có cấu trúc.
     Có retry với exponential backoff khi gặp lỗi 429 (rate limit).
@@ -131,8 +133,7 @@ def extract_table(image_path: str, model: str = "gemini-3.1-flash-lite-preview")
         try:
             print(f"  Đang gửi request đến Gemini ({model})...")
             response = client.models.generate_content(
-                model=model,
-                contents=[PROMPT, img]
+                model=model, contents=[PROMPT, img]
             )
 
             # Kiểm tra response có nội dung không
@@ -149,10 +150,16 @@ def extract_table(image_path: str, model: str = "gemini-3.1-flash-lite-preview")
             error_str = str(e).lower()
 
             # Kiểm tra rate limit (429)
-            if "429" in error_str or "rate" in error_str or "resource_exhausted" in error_str:
+            if (
+                "429" in error_str
+                or "rate" in error_str
+                or "resource_exhausted" in error_str
+            ):
                 if attempt < max_retries:
                     delay = base_delay * (2 ** (attempt - 1))  # 2, 4, 8, 16, ...
-                    print(f"  ⚠ Rate limit (attempt {attempt}/{max_retries}), chờ {delay}s...")
+                    print(
+                        f"  ⚠ Rate limit (attempt {attempt}/{max_retries}), chờ {delay}s..."
+                    )
                     time.sleep(delay)
                     continue
                 else:
@@ -167,7 +174,9 @@ def extract_table(image_path: str, model: str = "gemini-3.1-flash-lite-preview")
     raise RuntimeError("Không thể gọi Gemini API sau nhiều lần thử.")
 
 
-def save_json_output(data: dict, image_path: str, output_base: str = "debug_output") -> str:
+def save_json_output(
+    data: dict, image_path: str, output_base: str = "debug_output"
+) -> str:
     """
     Lưu JSON kết quả ra file debug_output/<tên_file>/page_XX.json
     Trả về đường dẫn file đã lưu.
@@ -192,7 +201,9 @@ def save_json_output(data: dict, image_path: str, output_base: str = "debug_outp
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Cách dùng: python src/gemini_extractor.py <đường_dẫn_ảnh_png>")
-        print("Ví dụ: python src/gemini_extractor.py debug_output/PAGE\\ 10+11+12/page_02.png")
+        print(
+            'Ví dụ: python src/gemini_extractor.py "debug_output/PAGE 10+11+12/page_02.png"'
+        )
         sys.exit(1)
 
     image_file = sys.argv[1]

@@ -5,7 +5,7 @@ Milestone 4: Module ghép nối nhiều trang
 - Tách section_header ra khỏi bảng dữ liệu
 
 Cách chạy:
-    python src/stitcher.py debug_output/PAGE\ 10+11+12/page_01.json debug_output/PAGE\ 10+11+12/page_02.json debug_output/PAGE\ 10+11+12/page_03.json
+    python src/stitcher.py "debug_output/PAGE 10+11+12/page_01.json" "debug_output/PAGE 10+11+12/page_02.json" "debug_output/PAGE 10+11+12/page_03.json"
 """
 
 import sys
@@ -18,7 +18,11 @@ def normalize_header(header: list) -> list:
     normalized = []
     for cell in header:
         # Bỏ \n, \r, tab; gộp nhiều khoảng trắng thành 1; lowercase
-        normalized.append(" ".join(cell.replace("\n", " ").replace("\r", " ").replace("\t", " ").split()).lower())
+        normalized.append(
+            " ".join(
+                cell.replace("\n", " ").replace("\r", " ").replace("\t", " ").split()
+            ).lower()
+        )
     return normalized
 
 
@@ -60,7 +64,9 @@ def stitch_pages(json_files: list[str]) -> dict:
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Cách dùng: python src/stitcher.py <file_json_1> <file_json_2> ...")
-        print("Ví dụ: python src/stitcher.py debug_output/PAGE\\ 10+11+12/page_01.json debug_output/PAGE\\ 10+11+12/page_02.json")
+        print(
+            'Ví dụ: python src/stitcher.py "debug_output/PAGE 10+11+12/page_01.json" "debug_output/PAGE 10+11+12/page_02.json"'
+        )
         sys.exit(1)
 
     json_files = sys.argv[1:]
@@ -71,7 +77,7 @@ if __name__ == "__main__":
     # Lưu kết quả
     output_dir = Path("debug_output/stitched")
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Tạo tên file output từ tên thư mục
     if json_files:
         first_path = Path(json_files[0])

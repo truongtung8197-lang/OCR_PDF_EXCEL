@@ -4,7 +4,7 @@ Milestone 6: Ghép toàn bộ pipeline
 - Output: 1 file Excel (.xlsx) cùng tên
 
 Cách chạy:
-    python src/main.py test-samples/PAGE\ 10+11+12.pdf
+    python src/main.py "test-samples/PAGE 10+11+12.pdf"
 """
 
 import sys
@@ -27,7 +27,7 @@ def process_pdf(pdf_path: str):
         sys.exit(1)
 
     pdf_stem = pdf_path.stem
-    
+
     # Đọc config và in thông báo định dạng số
     config_path = Path("config.json")
     if config_path.exists():
@@ -35,33 +35,57 @@ def process_pdf(pdf_path: str):
             config = json.load(f)
         decimal_sep = config.get("decimal_separator", ",")
         thousand_sep = config.get("thousand_separator", ".")
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Đang xử lý: {pdf_path.name}")
-        print(f"Định dạng số: dấu '{thousand_sep}' = phân cách nghìn, dấu '{decimal_sep}' = phân cách thập phân")
+        print(
+            f"Định dạng số: dấu '{thousand_sep}' = phân cách nghìn, dấu '{decimal_sep}' = phân cách thập phân"
+        )
         print(f"(Chỉnh trong config.json nếu file này dùng định dạng khác)")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
     else:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Đang xử lý: {pdf_path.name}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
-    # Bước 1: PDF → ảnh
+    # Bước 1: PDF → ảnh (kiểm tra nếu đã có ảnh thì skip)
     print("\n[Bước 1/4] Chuyển PDF → ảnh...")
-    image_paths = pdf_to_images(pdf_path, output_dir="debug_output", dpi=300)
-    if not image_paths:
-        print("LỖI: Không tạo được ảnh nào từ PDF.")
-        sys.exit(1)
-    print(f"  ✓ Đã tạo {len(image_paths)} ảnh")
+    image_dir = Path("debug_output") / pdf_stem
+    if image_dir.exists() and any(image_dir.glob("page_*.png")):
+        existing_count = len(list(image_dir.glob("page_*.png")))
+        print(f"  ⏭ Bỏ qua: đã có {existing_count} ảnh trong {image_dir}")
+        # Tạo danh sách đường dẫn ảnh từ file đã có
+        image_paths = sorted(
+            [str(p) for p in image_dir.glob("page_*.png")],
+            key=lambda x: int(Path(x).stem.split("_")[1]),
+        )
+    else:
+        image_paths = pdf_to_images(pdf_path, output_dir="debug_output", dpi=300)
+        if not image_paths:
+            print("LỖI: Không tạo được ảnh nào từ PDF.")
+            sys.exit(1)
+        print(f"  ✓ Đã tạo {len(image_paths)} ảnh")
 
-    # Bước 2: Gọi Gemini cho từng ảnh
+    # Bước 2: Gọi Gemini cho từng ảnh (hoặc dùng JSON đã có)
     print("\n[Bước 2/4] Gọi Gemini API trích xuất JSON...")
     json_files = []
     for img_path in image_paths:
-        print(f"\n  Đang xử lý: {Path(img_path).name}")
+        # Kiểm tra xem đã có file JSON tương ứng chưa
+        img_path_obj = Path(img_path)
+        parent_dir = img_path_obj.parent.name
+        json_name = img_path_obj.stem + ".json"
+        existing_json = Path("debug_output") / parent_dir / json_name
+
+        if existing_json.exists():
+            print(f"\n  ⏭ Bỏ qua: {img_path_obj.name} — đã có JSON ({existing_json})")
+            json_files.append(str(existing_json))
+            continue
+
+        print(f"\n  Đang xử lý: {img_path_obj.name}")
         try:
             result = extract_table(img_path)
             # Lưu JSON
             from gemini_extractor import save_json_output
+
             json_file = save_json_output(result, img_path, output_base="debug_output")
             json_files.append(json_file)
         except Exception as e:
@@ -78,7 +102,9 @@ def process_pdf(pdf_path: str):
     # Bước 3: Ghép nối các trang (đơn giản: nối chồng theo thứ tự)
     print("\n[Bước 3/4] Ghép nối các trang...")
     stitched_data = stitch_pages(json_files)
-    print(f"  ✓ Đã ghép {len(json_files)} trang → {len(stitched_data.get('elements', []))} elements")
+    print(
+        f"  ✓ Đã ghép {len(json_files)} trang → {len(stitched_data.get('elements', []))} elements"
+    )
 
     # Bước 4: Xuất Excel
     print("\n[Bước 4/4] Xuất Excel...")
@@ -88,16 +114,16 @@ def process_pdf(pdf_path: str):
 
     json_to_excel(stitched_data, str(output_file))
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"✓ HOÀN TẤT!")
     print(f"  File Excel: {output_file}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Cách dùng: python src/main.py <đường_dẫn_file_pdf>")
-        print("Ví dụ: python src/main.py test-samples/PAGE\\ 10+11+12.pdf")
+        print('Ví dụ: python src/main.py "test-samples/PAGE 10+11+12.pdf"')
         sys.exit(1)
 
     pdf_file = sys.argv[1]

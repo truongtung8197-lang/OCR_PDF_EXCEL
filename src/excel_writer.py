@@ -5,7 +5,7 @@ Milestone 3: Chuyển JSON của 1 trang → file Excel (.xlsx)
 - Format số Việt Nam theo config.json
 
 Cách chạy:
-    python src/excel_writer.py debug_output/PAGE\ 3+4/page_01.json
+    python src/excel_writer.py "debug_output/PAGE 3+4/page_01.json"
 """
 
 import sys
@@ -19,10 +19,7 @@ from openpyxl.utils import get_column_letter
 
 # Đọc config định dạng số
 CONFIG_PATH = Path("config.json")
-NUMBER_CONFIG = {
-    "decimal_separator": ",",
-    "thousand_separator": "."
-}
+NUMBER_CONFIG = {"decimal_separator": ",", "thousand_separator": "."}
 if CONFIG_PATH.exists():
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         user_config = json.load(f)
@@ -33,7 +30,7 @@ NUMERIC_COLUMNS = {
     "khối lượng",
     "đơn giá chi tiết",
     "đơn giá thành phần",
-    "đơn giá module"
+    "đơn giá module",
 }
 
 
@@ -52,7 +49,7 @@ def parse_vn_number(text: str):
 
     # Loại bỏ dấu cách
     text = text.replace(" ", "")
-    
+
     thousand_sep = NUMBER_CONFIG.get("thousand_separator", ".")
     decimal_sep = NUMBER_CONFIG.get("decimal_separator", ",")
 
@@ -82,12 +79,18 @@ def apply_cell_style(cell, is_header: bool = False, is_section: bool = False):
     if is_section:
         # Section header: in đậm, merge full-width
         cell.font = Font(bold=True, size=12)
-        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.alignment = Alignment(
+            horizontal="center", vertical="center", wrap_text=True
+        )
     elif is_header:
         # Table header: in đậm, nền xám nhạt
         cell.font = Font(bold=True, size=11)
-        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-        cell.fill = PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid")
+        cell.alignment = Alignment(
+            horizontal="center", vertical="center", wrap_text=True
+        )
+        cell.fill = PatternFill(
+            start_color="D9D9D9", end_color="D9D9D9", fill_type="solid"
+        )
     else:
         # Normal cell
         cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
@@ -97,7 +100,7 @@ def apply_cell_style(cell, is_header: bool = False, is_section: bool = False):
         left=Side(style="thin"),
         right=Side(style="thin"),
         top=Side(style="thin"),
-        bottom=Side(style="thin")
+        bottom=Side(style="thin"),
     )
     cell.border = thin_border
 
@@ -114,7 +117,9 @@ def write_table(ws, table_data: dict, start_row: int = 1) -> int:
         return start_row
 
     current_row = start_row
-    num_cols = len(header_rows[0]) if header_rows else (len(rows[0]["cells"]) if rows else 0)
+    num_cols = (
+        len(header_rows[0]) if header_rows else (len(rows[0]["cells"]) if rows else 0)
+    )
 
     # Xác định cột nào là cột số dựa vào tên header
     numeric_col_indices = set()
@@ -125,7 +130,7 @@ def write_table(ws, table_data: dict, start_row: int = 1) -> int:
             # Chuẩn hóa tên cột: lowercase, bỏ \n, bỏ phần trong ngoặc đơn (vd: "(1)", "(2)")
             header_normalized = " ".join(header_text.replace("\n", " ").split()).lower()
             # Bỏ phần trong ngoặc đơn (vd: "khối lượng (1)" → "khối lượng")
-            header_normalized = re.sub(r'\s*\([^)]*\)', '', header_normalized).strip()
+            header_normalized = re.sub(r"\s*\([^)]*\)", "", header_normalized).strip()
             # Kiểm tra xem có phải cột số không
             for numeric_col in NUMERIC_COLUMNS:
                 if numeric_col in header_normalized:
@@ -139,13 +144,40 @@ def write_table(ws, table_data: dict, start_row: int = 1) -> int:
             apply_cell_style(cell, is_header=True)
         current_row += 1
 
-    # Ghi data rows
+    # ─── Post-processing: Sửa lỗi rowspan/tổ chức cells sai từ Gemini ─────
+    # 1. Nếu cột STT (cột 1) có rowspan > 1 và text là số → sai, fix về 1
+    # 2. Nếu số cells < header_cols → thiếu cell STT, chèn thêm cell rỗng đầu
+    header_col_count = len(header_rows[0]) if header_rows else 0
+    for row_data in rows:
+        cells = row_data.get("cells", [])
+        if not cells:
+            continue
+        # Fix 1: rowspan sai ở cột STT
+        first_cell = cells[0]
+        text = first_cell.get("text", "").strip()
+        rowspan = first_cell.get("rowspan", 1)
+        if rowspan > 1 and text.isdigit():
+            first_cell["rowspan"] = 1
+        # Fix 2: Thiếu cell STT ở dòng con (số cells < header_cols)
+        if header_col_count > 0 and len(cells) < header_col_count:
+            # Chèn 1 cell rỗng vào đầu mảng
+            cells.insert(0, {"text": "", "rowspan": 1, "colspan": 1})
+
+    # Ghi data rows — track các cột đang được merge rowspan
+    # active_rowspans[col_idx] = số dòng còn lại (kể cả dòng hiện tại)
+    active_rowspans = {}
+
     for row_data in rows:
         cells = row_data.get("cells", [])
         col_idx = 1
         cell_idx = 0
 
         while cell_idx < len(cells):
+            # Nếu cột này đang bị merge rowspan từ dòng trước → skip
+            if col_idx in active_rowspans and active_rowspans[col_idx] > 0:
+                col_idx += 1
+                continue
+
             cell_info = cells[cell_idx]
             text = cell_info.get("text", "")
             rowspan = cell_info.get("rowspan", 1)
@@ -158,20 +190,38 @@ def write_table(ws, table_data: dict, start_row: int = 1) -> int:
                 value = None
 
             # Ghi cell
-            cell = ws.cell(row=current_row, column=col_idx, value=value if value is not None else text)
+            cell = ws.cell(row=current_row, column=col_idx)
+            cell.value = value if value is not None else text
             apply_cell_style(cell, is_header=False)
 
             # Merge cell nếu cần
             if rowspan > 1 or colspan > 1:
-                ws.merge_cells(
-                    start_row=current_row,
-                    start_column=col_idx,
-                    end_row=current_row + rowspan - 1,
-                    end_column=col_idx + colspan - 1
-                )
+                try:
+                    ws.merge_cells(
+                        start_row=current_row,
+                        start_column=col_idx,
+                        end_row=current_row + rowspan - 1,
+                        end_column=col_idx + colspan - 1,
+                    )
+                except Exception:
+                    pass  # Bỏ qua nếu merge bị lỗi (vd: overlap)
+
+            # Track rowspan: đánh dấu các dòng SAU cần skip cột này
+            if rowspan > 1:
+                active_rowspans[col_idx] = rowspan  # rowspan dòng kể cả hiện tại
+            else:
+                # Nếu không merge, xoá track cũ (nếu có)
+                if col_idx in active_rowspans:
+                    del active_rowspans[col_idx]
 
             col_idx += colspan
             cell_idx += 1
+
+        # Kết thúc dòng: giảm rowspan counter cho các cột đang merge
+        for col in list(active_rowspans.keys()):
+            active_rowspans[col] -= 1
+            if active_rowspans[col] <= 0:
+                del active_rowspans[col]
 
         current_row += 1
 
@@ -196,7 +246,12 @@ def json_to_excel(json_data: dict, output_path: str):
             # Ghi section header: merge full-width, in đậm
             text = element.get("text", "")
             num_cols = 8  # Số cột mặc định (có thể điều chỉnh)
-            ws.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=num_cols)
+            ws.merge_cells(
+                start_row=current_row,
+                start_column=1,
+                end_row=current_row,
+                end_column=num_cols,
+            )
             cell = ws.cell(row=current_row, column=1, value=text)
             apply_cell_style(cell, is_section=True)
             current_row += 1
@@ -216,7 +271,11 @@ def json_to_excel(json_data: dict, output_path: str):
     # Auto-adjust column widths
     for col in ws.columns:
         max_length = 0
-        column = col[0].column_letter
+        # Bỏ qua nếu cell đầu tiên là MergedCell (không có column_letter)
+        first_cell = col[0]
+        if str(type(first_cell)).endswith("MergedCell'>"):
+            continue
+        column = first_cell.column_letter
         for cell in col:
             try:
                 if cell.value:

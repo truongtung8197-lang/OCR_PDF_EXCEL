@@ -12,3 +12,10 @@ projectbrief.md → productContext.md → techContext.md → systemPatterns.md �
 5. Sau khi hoàn thành 1 task: cập nhật `memory-bank/activeContext.md` và `memory-bank/progress.md` để phiên làm việc sau (dù dùng AI khác hay quên ngữ cảnh) vẫn hiểu được tình trạng dự án.
 6. Ưu tiên giải pháp đơn giản, dễ bảo trì hơn là giải pháp "tối ưu" nhưng phức tạp — vì đây là tool cá nhân, không phải sản phẩm thương mại.
 7. Khi không chắc chắn về 1 quyết định kỹ thuật (vd: chọn thư viện OCR nào), trình bày ưu/nhược điểm ngắn gọn và hỏi người dùng chọn, thay vì tự quyết định.
+
+## Trước khi ghi bất kỳ file .xlsx nào trên Windows:
+1. KHÔNG được ghi đè trực tiếp vào file đang được dùng làm output cuối.
+   Luôn ghi ra file tạm (VD: output_temp.xlsx) trước.
+2. Nếu lệnh terminal bị treo quá 30 giây, dừng lại và báo người dùng
+   thay vì chờ tiếp — có thể do file bị Windows lock.
+3. Không mở file Excel bằng subprocess hay os.startfile() trong quá trình xử lý.
