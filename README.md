@@ -21,18 +21,28 @@ Công cụ này giúp bạn chuyển các **file PDF dạng scan** (ảnh chụp
 
 ### Bước 1: Tải code về máy
 
-Tải toàn bộ thư mục dự án này về máy (hoặc clone từ GitHub nếu bạn biết Git).
+Vào trang: https://github.com/truongtung8197-lang/OCR_PDF_EXCEL
+
+Nhấn nút xanh "Code" → chọn "Download ZIP" → giải nén ra thư mục nào đó trên máy (ví dụ: D:\Working\OCR_PDF_EXCEL).
+
+Nếu bạn biết Git thì có thể clone: 
+
+```
+git clone https://github.com/truongtung8197-lang/OCR_PDF_EXCEL.git
+```
 
 ### Bước 2: Mở Terminal / Command Prompt
 
-- Nhấn `Windows + R`, gõ `cmd`, nhấn Enter.
-- Gõ lệnh sau để vào thư mục dự án (thay đường dẫn đúng với máy bạn):
-
-```cmd
-cd đường-dẫn-tới-thư-mục-dự-án
-
-ví dụ: cd d:\Working\OCR_PDF_EXCEL
+Nhấn Windows + R, gõ cmd, nhấn Enter. Sau đó gõ:
 ```
+cd D:\Working\OCR_PDF_EXCEL
+```
+⚠️ Thay D:\Working\OCR_PDF_EXCEL bằng đường dẫn thật đến thư mục bạn vừa giải nén ở Bước 1.
+
+Cách tìm đường dẫn nhanh: Mở thư mục vừa giải nén bằng File Explorer 
+→ nhấn vào thanh địa chỉ trên cùng 
+→ copy đường dẫn hiện ra →
+ paste vào sau lệnh cd .
 
 ### Bước 3: Tạo môi trường ảo (khuyên dùng)
 
