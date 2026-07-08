@@ -2,9 +2,7 @@
 
 ## Giới thiệu
 
-Công cụ này giúp bạn chuyển các **file PDF dạng scan** (ảnh chụp/scan giấy tờ) có chứa **bảng số liệu tiếng Việt** thành file **Excel (.xlsx)**.
-
-**Ví dụ:** Bạn có 1 file PDF scan bảng báo giá 38 trang, thay vì ngồi gõ lại từng số vào Excel, tool này sẽ tự động đọc bảng và xuất ra file Excel chỉ trong vài phút.
+Công cụ này giúp bạn chuyển các **file PDF dạng scan** (ảnh chụp/scan giấy tờ) có chứa **bảng số liệu tiếng Việt (Chưa test file tiếng anh, nhưng khả năng cao vẫn sẽ thành công)** thành file **Excel (.xlsx)**.
 
 > ⚠️ **Độ chính xác:** Tool đạt khoảng **90%** — bạn vẫn cần kiểm tra lại kết quả và sửa tay những chỗ sai. Mục tiêu là **giảm công sức**, không phải loại bỏ hoàn toàn việc kiểm tra.
 
@@ -31,7 +29,9 @@ Tải toàn bộ thư mục dự án này về máy (hoặc clone từ GitHub n�
 - Gõ lệnh sau để vào thư mục dự án (thay đường dẫn đúng với máy bạn):
 
 ```cmd
-cd d:\Working\OCR_PDF_EXCEL
+cd đường-dẫn-tới-thư-mục-dự-án
+
+ví dụ: cd d:\Working\OCR_PDF_EXCEL
 ```
 
 ### Bước 3: Tạo môi trường ảo (khuyên dùng)
