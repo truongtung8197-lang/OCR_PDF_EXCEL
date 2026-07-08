@@ -6,7 +6,7 @@ Công cụ này giúp bạn chuyển các **file PDF dạng scan** (ảnh chụp
 
 **Ví dụ:** Bạn có 1 file PDF scan bảng báo giá 38 trang, thay vì ngồi gõ lại từng số vào Excel, tool này sẽ tự động đọc bảng và xuất ra file Excel chỉ trong vài phút.
 
-> ⚠️ **Lưu ý:** Tool không đúng 100%. Bạn vẫn cần kiểm tra lại kết quả và sửa tay những chỗ sai. Mục tiêu là **giảm công sức**, không phải loại bỏ hoàn toàn việc kiểm tra.
+> ⚠️ **Độ chính xác:** Tool đạt khoảng **90%** — bạn vẫn cần kiểm tra lại kết quả và sửa tay những chỗ sai. Mục tiêu là **giảm công sức**, không phải loại bỏ hoàn toàn việc kiểm tra.
 
 ---
 
@@ -49,21 +49,19 @@ Sau khi chạy, bạn sẽ thấy chữ `(venv)` xuất hiện ở đầu dòng 
 pip install -r requirements.txt
 ```
 
-### Bước 5: Lấy API key Gemini (miễn phí)
+### Bước 5: Lấy API key Gemini và tạo file `.env`
 
 1. Vào trang: https://aistudio.google.com/apikey
 2. Đăng nhập bằng tài khoản Google của bạn.
 3. Nhấn **"Create API Key"** → chọn project (hoặc tạo mới) → copy key.
-4. Trong thư mục dự án, tạo file tên là `.env` (dùng Notepad hoặc bất kỳ editor nào).
-5. Gõ vào file `.env` nội dung sau (thay `API_KEY_CUA_BAN` bằng key bạn vừa copy):
+4. Trong thư mục dự án đã có sẵn file **`.env.example`** — hãy **copy** hoặc **đổi tên** nó thành `.env` (bỏ đuôi `.example`).
+5. Mở file `.env` bằng Notepad và thay `thay_bang_api_key_cua_ban` bằng API key bạn vừa copy:
 
+```ini
+GEMINI_API_KEY=AIz... (key thật của bạn)
 ```
-GEMINI_API_KEY=API_KEY_CUA_BAN
-```
 
-6. Lưu file lại.
-
-> 🔒 File `.env` chứa key riêng của bạn, **không chia sẻ file này cho người khác**.
+> 🔒 File `.env` chứa key riêng của bạn, **không chia sẻ file này cho người khác**. File `.env` đã được liệt kê trong `.gitignore` nên sẽ không bị đẩy lên GitHub.
 
 ---
 
@@ -83,7 +81,7 @@ python src/main.py "đường_dẫn_file_pdf"
 python src/main.py "test-samples/PAGE 10+11+12.pdf"
 ```
 
-hoặc với file bạn tự có:
+hoặc bạn copy file PDF của mình vào thư mục `input/` rồi chạy:
 
 ```cmd
 python src/main.py "input/ORIGINAL.pdf"
@@ -137,6 +135,18 @@ Khi chạy, tool sẽ in ra các bước:
 
 ---
 
+## Giới hạn Gemini API
+
+Tool sử dụng **Google Gemini API bản free** (model `gemini-3.1-flash-lite-preview`).
+
+- **Giới hạn:** Khoảng **10-15 request/phút** và **1.500 request/ngày** (tuỳ theo chính sách của Google).
+- Với file PDF 38 trang, bạn chỉ cần gửi 38 request — hoàn toàn trong giới hạn.
+- Nếu gặp lỗi `429 Resource exhausted`, hãy **đợi 1-2 phút** rồi chạy lại — tool có cơ chế retry tự động.
+
+> Vì dùng API qua Internet nên tốc độ còn phụ thuộc vào đường truyền của bạn.
+
+---
+
 ## Cấu hình định dạng số
 
 File `config.json` trong thư mục dự án cho phép bạn chỉnh cách đọc số Việt Nam:
@@ -160,7 +170,8 @@ File `config.json` trong thư mục dự án cho phép bạn chỉnh cách đọ
 
 ```
 OCR_PDF_EXCEL/
-├── .env                  # Chứa API key (tự tạo, không commit lên git)
+├── .env                  # Chứa API key (tạo từ .env.example, không lên git)
+├── .env.example          # Mẫu file .env (có trên git)
 ├── .gitignore
 ├── config.json           # Cấu hình định dạng số
 ├── requirements.txt      # Danh sách thư viện cần cài
@@ -172,9 +183,9 @@ OCR_PDF_EXCEL/
 │   ├── stitcher.py       # Ghép nối nhiều trang (nối chồng)
 │   ├── excel_writer.py   # Xuất Excel (merge cell, format số)
 │   └── validator.py      # (Không dùng)
-├── input/                # Đặt file PDF vào đây
-├── debug_output/         # Ảnh & JSON tạm (tự động tạo khi chạy)
-└── output/               # File Excel kết quả (tự động tạo khi chạy)
+├── input/                # Đặt file PDF vào đây (chỉ có .gitkeep trên git)
+├── debug_output/         # Ảnh & JSON tạm (tự động tạo khi chạy, không lên git)
+└── output/               # File Excel kết quả (tự động tạo, không lên git)
 ```
 
 ---
@@ -183,22 +194,11 @@ OCR_PDF_EXCEL/
 
 | Lỗi | Nguyên nhân | Cách xử lý |
 |-----|-------------|------------|
-| `Không tìm thấy GEMINI_API_KEY` | Chưa tạo file `.env` hoặc sai key | Làm lại Bước 5 ở phần Cài đặt |
+| `Không tìm thấy GEMINI_API_KEY` | Chưa tạo file `.env` hoặc sai key | Copy `.env.example` → `.env` và điền API key đúng |
 | `429 Resource exhausted` | Vượt quá giới hạn request/phút | Đợi 1-2 phút rồi chạy lại |
-| `Không tìm thấy file PDF` | Sai đường dẫn | Kiểm tra lại đường dẫn file PDF |
+| `Không tìm thấy file PDF` | Sai đường dẫn | Kiểm tra lại đường dẫn file PDF trong lệnh chạy |
 | `Permission denied: output\...xlsx` | File Excel đang mở trong Excel | Đóng file Excel lại, chạy lại |
-| File Excel ra nhưng thiếu/ sai dữ liệu | Gemini đọc sai bảng | Sửa tay trong Excel, hoặc sửa file JSON trong `debug_output/` rồi chạy lại (sẽ skip Gemini) |
-
----
-
-## Mẹo sửa lỗi JSON thủ công
-
-Nếu kết quả Excel ra chưa đúng, bạn có thể:
-
-1. Mở file JSON trong `debug_output/<tên_pdf>/` (dùng Notepad hoặc VS Code)
-2. Sửa trực tiếp các giá trị sai trong JSON
-3. Chạy lại lệnh — tool sẽ **bỏ qua Bước 1+2** (vì đã có ảnh và JSON), chỉ chạy ghép nối + xuất Excel
-4. Xem kết quả mới
+| File Excel ra nhưng thiếu/ sai dữ liệu | Gemini đọc sai bảng (~10% lỗi) | Sửa tay trong Excel, hoặc sửa file JSON trong `debug_output/` rồi chạy lại |
 
 ---
 
