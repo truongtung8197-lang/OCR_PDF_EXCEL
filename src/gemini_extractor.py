@@ -70,7 +70,19 @@ QUY TẮC QUAN TRỌNG:
 5. Cell rỗng (không có dữ liệu) vẫn giữ "text": "" để không lệch cột.
 6. Nếu trang chỉ có văn bản thường, không có bảng, trả về elements chứa paragraph.
 7. Định dạng số Việt Nam: dấu "." là phân cách nghìn, dấu "," là phân cách thập phân. Giữ nguyên định dạng gốc, không chuyển đổi.
+8. MỌI cell trong bảng PHẢI có đủ 2 keys: "rowspan" và "colspan". KHÔNG được thiếu bất kỳ key nào. Ví dụ đúng: { "text": "ABC", "rowspan": 1, "colspan": 1 }
 """
+
+
+def repair_json(text: str) -> str:
+    """
+    Sửa các lỗi JSON syntax phổ biến mà Gemini thường mắc phải.
+    - Thiếu key "colspan" sau "rowspan": { "rowspan": 1, 1 } → { "rowspan": 1, "colspan": 1 }
+    """
+    # Pattern: tìm { "rowspan": <số>, <số> } và thêm "colspan": vào trước số thứ 2
+    # Ví dụ: { "rowspan": 1, 1 } → { "rowspan": 1, "colspan": 1 }
+    repaired = re.sub(r'("rowspan":\s*\d+)\s*,\s*(\d+)', r'\1, "colspan": \2', text)
+    return repaired
 
 
 def extract_json_from_response(text: str) -> dict:
@@ -94,6 +106,9 @@ def extract_json_from_response(text: str) -> dict:
             json_str = text[start : end + 1]
         else:
             json_str = text.strip()
+
+    # Sửa lỗi JSON phổ biến trước khi parse
+    json_str = repair_json(json_str)
 
     # Parse JSON
     try:

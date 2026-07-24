@@ -21,11 +21,11 @@ Công cụ này giúp bạn chuyển các **file PDF dạng scan** (ảnh chụp
 
 ### Bước 1: Tải code về máy
 
-Vào trang: https://github.com/truongtung8197-lang/OCR_PDF_EXCEL
+Vào trang: <https://github.com/truongtung8197-lang/OCR_PDF_EXCEL>
 
 Nhấn nút xanh "Code" → chọn "Download ZIP" → giải nén ra thư mục nào đó trên máy (ví dụ: D:\Working\OCR_PDF_EXCEL).
 
-Nếu bạn biết Git thì có thể clone: 
+Nếu bạn biết Git thì có thể clone:
 
 ```
 git clone https://github.com/truongtung8197-lang/OCR_PDF_EXCEL.git
@@ -34,13 +34,15 @@ git clone https://github.com/truongtung8197-lang/OCR_PDF_EXCEL.git
 ### Bước 2: Mở Terminal / Command Prompt
 
 Nhấn Windows + R, gõ cmd, nhấn Enter. Sau đó gõ:
+
 ```
 cd D:\Working\OCR_PDF_EXCEL
 ```
+
 ⚠️ Thay D:\Working\OCR_PDF_EXCEL bằng đường dẫn thật đến thư mục bạn vừa giải nén ở Bước 1.
 
-Cách tìm đường dẫn nhanh: Mở thư mục vừa giải nén bằng File Explorer 
-→ nhấn vào thanh địa chỉ trên cùng 
+Cách tìm đường dẫn nhanh: Mở thư mục vừa giải nén bằng File Explorer
+→ nhấn vào thanh địa chỉ trên cùng
 → copy đường dẫn hiện ra →
  paste vào sau lệnh cd .
 
@@ -61,7 +63,7 @@ pip install -r requirements.txt
 
 ### Bước 5: Lấy API key Gemini và tạo file `.env`
 
-1. Vào trang: https://aistudio.google.com/apikey
+1. Vào trang: <https://aistudio.google.com/apikey>
 2. Đăng nhập bằng tài khoản Google của bạn.
 3. Nhấn **"Create API Key"** → chọn project (hoặc tạo mới) → copy key.
 4. Trong thư mục dự án đã có sẵn file **`.env.example`** — hãy **copy** hoặc **đổi tên** nó thành `.env` (bỏ đuôi `.example`).
@@ -106,6 +108,7 @@ python src/main.py "input/ORIGINAL.pdf"
 ### Chạy lại lần 2 (nhanh hơn)
 
 Khi chạy lại lần 2, tool sẽ tự động **bỏ qua các bước đã làm**:
+
 - **Bước 1:** Nếu đã có ảnh trong `debug_output/<tên_pdf>/` → bỏ qua, không render PDF lại.
 - **Bước 2:** Nếu đã có JSON tương ứng → bỏ qua, không gọi Gemini API.
 - Chỉ chạy **ghép nối** và **xuất Excel** — rất nhanh.
